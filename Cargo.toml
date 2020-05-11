@@ -1,5 +1,5 @@
 [package]
-name = "WalletRegisteService"
+name = "wallet_registe_service"
 version = "0.1.0"
 authors = ["luo4lu <luo4lu@163.com>"]
 edition = "2018"
