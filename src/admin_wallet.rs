@@ -1,7 +1,7 @@
+use crate::config::Config;
 use crate::response::ResponseBody;
 use actix_web::{post, web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
-
 //register a new wallet
 #[derive(Deserialize, Debug)]
 pub struct NewWalletRequest<T> {
@@ -22,7 +22,10 @@ pub struct NewWalletRespones {
 }
 
 #[post("/api/wallet")]
-pub async fn new_reg_wallet(req: web::Json<NewWalletRequest<Info>>) -> impl Responder {
+pub async fn new_reg_wallet(
+    config: web::Data<Config>,
+    req: web::Json<NewWalletRequest<Info>>,
+) -> impl Responder {
     println!("{:?}", req);
     HttpResponse::Ok().json(ResponseBody::new_success(Some(NewWalletRespones {
         cert: String::from(""),
