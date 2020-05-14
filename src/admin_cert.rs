@@ -15,10 +15,7 @@ use tokio::prelude::*;
 #[get("/api/cert")]
 pub async fn read_cert(config: web::Data<Config>) -> impl Responder {
     //read file
-    let mut file = match File::open(&config.cert_path).await {
-        Ok(file) => file,
-        Err(error) => panic!("no file,please new register systen cert:{:?}", error),
-    };
+    let mut file = File::open(&config.cert_path).await.unwrap();
     //read json file to String
     let mut contents = String::new();
     file.read_to_string(&mut contents).await.unwrap();
@@ -68,13 +65,7 @@ pub async fn update_reg_cert(
     config: web::Data<Config>,
     req: web::Json<UpdateCertRequest>,
 ) -> impl Responder {
-    let sd: [u8; 32] = match FromHex::from_hex(&req.seed) {
-        Ok(s) => {
-            println!("Hex to u8 :{:?}", s);
-            s
-        }
-        Err(error) => panic!("convert failed:{:?}", error),
-    };
+    let sd: [u8; 32] = FromHex::from_hex(&req.seed).unwrap();
     let info_form_rang = Keypair::<
         [u8; 32],
         Sha3,
@@ -101,10 +92,7 @@ pub struct ReadCertResponse {
 #[get("/admin/cert")]
 pub async fn read_reg_cert(config: web::Data<Config>) -> impl Responder {
     //read file
-    let mut file = match File::open(&config.cert_path).await {
-        Ok(file) => file,
-        Err(error) => panic!("no file,please new register systen cert:{:?}", error),
-    };
+    let mut file = File::open(&config.cert_path).await.unwrap();
     //read json file to String
     let mut contents = String::new();
     file.read_to_string(&mut contents).await.unwrap();
