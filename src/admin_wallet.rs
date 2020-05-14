@@ -63,7 +63,7 @@ pub async fn new_reg_wallet(
     ripemd.input_str(&hex);
     let uid_hasher = ripemd.result_str();*/
     let mut uid_hasher = Sm3::default();
-    uid_hasher.update(&public_str.clone());
+    uid_hasher.update(&public_str);
     uid_hasher.finalize();
     let mut uid_str: String = String::new();
     for a in deserialize.get_code().iter() {
