@@ -8,7 +8,6 @@ use asymmetric_crypto::keypair::Keypair;
 use dislog_hal::Hasher;
 use hex::ToHex;
 use serde::{Deserialize, Serialize};
-use std::fmt::Write;
 
 use tokio::fs::File;
 use tokio::prelude::*;
@@ -37,11 +36,23 @@ pub async fn new_reg_wallet(
     req: web::Json<NewWalletRequest<Info>>,
 ) -> impl Responder {
     println!("{:?}", req);
-    let mut file = File::open(&config.cert_path).await.unwrap();
+    let mut file = match File::open(&config.cert_path).await{
+        Ok(f) => f,
+        Err(e) => {
+            println!("file open failed:{:?}",e);
+            return HttpResponse::Ok().json(ResponseBody::<()>::new_file_error());
+        },
+    };
 
     //read json file to string
     let mut contents = String::new();
-    file.read_to_string(&mut contents).await.unwrap();
+    match file.read_to_string(&mut contents).await{
+        Ok(s) => s,
+        Err(e) => {
+            println!("read file to string failed:{:?}",e);
+            return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
+        },
+    };
 
     //Deserialize to the specified data format
     let deserialize: Keypair<
@@ -49,7 +60,13 @@ pub async fn new_reg_wallet(
         Sha3,
         dislog_hal_sm2::PointInner,
         dislog_hal_sm2::ScalarInner,
-    > = serde_json::from_str(&contents).unwrap();
+    > = match serde_json::from_str(&contents){
+        Ok(de) => de,
+        Err(e) =>{
+            println!("Keypair conversion failed:{:?}",e);
+            return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
+        },
+    };
     //format conversion to string
     let public_str: String = deserialize.get_public_key().to_bytes().encode_hex();
 
@@ -62,13 +79,11 @@ pub async fn new_reg_wallet(
     let mut ripemd = Ripemd160::new();
     ripemd.input_str(&hex);
     let uid_hasher = ripemd.result_str();*/
+
+    //use Sm3算法实现hash转换
     let mut uid_hasher = Sm3::default();
     uid_hasher.update(&public_str);
-    uid_hasher.finalize();
-    let mut uid_str: String = String::new();
-    for a in deserialize.get_code().iter() {
-        write!(uid_str, "{:02x}", a).unwrap();
-    }
+    let uid_str = uid_hasher.finalize().encode_hex();
 
     HttpResponse::Ok().json(ResponseBody::new_success(Some(NewWalletRespones {
         cert: public_str,
