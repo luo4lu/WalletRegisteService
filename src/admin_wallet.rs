@@ -36,39 +36,39 @@ pub async fn new_reg_wallet(
     req: web::Json<NewWalletRequest<Info>>,
 ) -> impl Responder {
     println!("{:?}", req);
-    let mut file = match File::open(&config.cert_path).await{
+    let mut file = match File::open(&config.cert_path).await {
         Ok(f) => f,
         Err(e) => {
-            println!("file open failed:{:?}",e);
+            println!("file open failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_file_error());
-        },
+        }
     };
 
     //read json file to string
     let mut contents = String::new();
-    match file.read_to_string(&mut contents).await{
+    match file.read_to_string(&mut contents).await {
         Ok(s) => s,
         Err(e) => {
-            println!("read file to string failed:{:?}",e);
+            println!("read file to string failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
-        },
+        }
     };
 
     //Deserialize to the specified data format
-    let deserialize: Keypair<
+    let keypair_value: Keypair<
         [u8; 32],
         Sha3,
         dislog_hal_sm2::PointInner,
         dislog_hal_sm2::ScalarInner,
-    > = match serde_json::from_str(&contents){
+    > = match serde_json::from_str(&contents) {
         Ok(de) => de,
-        Err(e) =>{
-            println!("Keypair conversion failed:{:?}",e);
+        Err(e) => {
+            println!("Keypair generate failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
-        },
+        }
     };
     //format conversion to string
-    let public_str: String = deserialize.get_public_key().to_bytes().encode_hex();
+    let public_str: String = keypair_value.get_public_key().to_bytes().encode_hex();
 
     //备用方法
     //hash conversion

@@ -14,21 +14,21 @@ use tokio::prelude::*;
 #[get("/api/cert")]
 pub async fn read_cert(config: web::Data<Config>) -> impl Responder {
     //read file
-    let mut file = match File::open(&config.cert_path).await{
+    let mut file = match File::open(&config.cert_path).await {
         Ok(f) => f,
         Err(e) => {
-            println!("file open failed:{:?}",e);
+            println!("file open failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_file_error());
-        },
+        }
     };
     //read json file to String
     let mut contents = String::new();
-   match file.read_to_string(&mut contents).await{
+    match file.read_to_string(&mut contents).await {
         Ok(s) => s,
         Err(e) => {
-            println!("read file to string failed:{:?}",e);
+            println!("read file to string failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
-        },
+        }
     };
 
     //Deserialize to the specified data format
@@ -37,12 +37,12 @@ pub async fn read_cert(config: web::Data<Config>) -> impl Responder {
         Sha3,
         dislog_hal_sm2::PointInner,
         dislog_hal_sm2::ScalarInner,
-    > = match serde_json::from_str(&contents){
+    > = match serde_json::from_str(&contents) {
         Ok(de) => de,
-        Err(e) =>{
-            println!("Keypair conversion failed:{:?}",e);
+        Err(e) => {
+            println!("Keypair conversion failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
-        },
+        }
     };
     //get public key of response
     HttpResponse::Ok().json(ResponseBody::new_success(Some(
@@ -61,26 +61,27 @@ pub async fn new_reg_cert(config: web::Data<Config>) -> impl Responder {
         Sha3,
         dislog_hal_sm2::PointInner,
         dislog_hal_sm2::ScalarInner,
-    >::generate(&mut rng){
+    >::generate(&mut rng)
+    {
         Ok(s) => s,
         Err(e) => {
-            println!("keypair conversion failed:{:?}",e);
+            println!("keypair conversion failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
-        },
+        }
     };
-    let serialized = match serde_json::to_string(&info_form_rang){
+    let serialized = match serde_json::to_string(&info_form_rang) {
         Ok(s) => s,
         Err(e) => {
-            println!("serialized to string failed:{:?}",e);
+            println!("serialized to string failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
-        },
+        }
     };
-    let mut file = match File::create(&config.cert_path).await{
+    let mut file = match File::create(&config.cert_path).await {
         Ok(f) => f,
         Err(e) => {
-            println!("file create failed:{:?}",e);
+            println!("file create failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_file_error());
-        },
+        }
     };
     match file.write_all(serialized.as_ref()).await {
         Ok(_) => HttpResponse::Ok().json(ResponseBody::<()>::new_success(None)),
@@ -99,38 +100,39 @@ pub async fn update_reg_cert(
     config: web::Data<Config>,
     req: web::Json<UpdateCertRequest>,
 ) -> impl Responder {
-    let sd: [u8; 32] = match FromHex::from_hex(&req.seed){
+    let sd: [u8; 32] = match FromHex::from_hex(&req.seed) {
         Ok(s) => s,
         Err(e) => {
-            println!("32 byte from hex failed:{:?}",e);
+            println!("32 byte from hex failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
-        },
+        }
     };
     let info_form_rang = match Keypair::<
         [u8; 32],
         Sha3,
         dislog_hal_sm2::PointInner,
         dislog_hal_sm2::ScalarInner,
-    >::generate_from_seed(sd){
+    >::generate_from_seed(sd)
+    {
         Ok(s) => s,
         Err(e) => {
-            println!("keypair conversion failed:{:?}",e);
+            println!("keypair generate failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
-        },
+        }
     };
-    let serialized = match serde_json::to_string(&info_form_rang){
+    let serialized = match serde_json::to_string(&info_form_rang) {
         Ok(s) => s,
         Err(e) => {
-            println!("serialized to string failed:{:?}",e);
+            println!("serialized to string failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
-        },
+        }
     };
-    let mut file = match File::create(&config.cert_path).await{
+    let mut file = match File::create(&config.cert_path).await {
         Ok(f) => f,
         Err(e) => {
-            println!("file create failed:{:?}",e);
+            println!("file create failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_file_error());
-        },
+        }
     };
     match file.write_all(serialized.as_ref()).await {
         Ok(_) => HttpResponse::Ok().json(ResponseBody::<()>::new_success(None)),
@@ -149,40 +151,40 @@ pub struct ReadCertResponse {
 #[get("/admin/cert")]
 pub async fn read_reg_cert(config: web::Data<Config>) -> impl Responder {
     //read file
-    let mut file = match File::open(&config.cert_path).await{
+    let mut file = match File::open(&config.cert_path).await {
         Ok(f) => f,
         Err(e) => {
-            println!("file open failed:{:?}",e);
+            println!("file open failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_file_error());
-        },
+        }
     };
     //read json file to String
     let mut contents = String::new();
-    match file.read_to_string(&mut contents).await{
+    match file.read_to_string(&mut contents).await {
         Ok(s) => s,
         Err(e) => {
-            println!("read file to string failed:{:?}",e);
+            println!("read file to string failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
-        },
+        }
     };
 
     //Deserialize to the specified data format
-    let deserialized: Keypair<
+    let keypair_value: Keypair<
         [u8; 32],
         Sha3,
         dislog_hal_sm2::PointInner,
         dislog_hal_sm2::ScalarInner,
-    > = match serde_json::from_str(&contents){
+    > = match serde_json::from_str(&contents) {
         Ok(de) => de,
-        Err(e) =>{
-            println!("Keypair conversion failed:{:?}",e);
+        Err(e) => {
+            println!("Keypair generate failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
-        },
+        }
     };
     //format conversion to string
-    let secret_str = deserialized.get_secret_key().to_bytes().encode_hex();
-    let code_str = deserialized.get_code().encode_hex();
-    let seed_str = deserialized.get_seed().encode_hex();
+    let secret_str = keypair_value.get_secret_key().to_bytes().encode_hex();
+    let code_str = keypair_value.get_code().encode_hex();
+    let seed_str = keypair_value.get_seed().encode_hex();
 
     //get public key of response
     HttpResponse::Ok().json(ResponseBody::new_success(Some(ReadCertResponse {

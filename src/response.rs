@@ -26,7 +26,7 @@ impl<T> ResponseBody<T> {
     }
 
     //文件类错误
-    pub fn new_file_error() -> Self{
+    pub fn new_file_error() -> Self {
         ResponseBody {
             code: 500,
             message: String::from("file open or write or read error."),
@@ -34,8 +34,8 @@ impl<T> ResponseBody<T> {
         }
     }
 
-     //字符转换
-     pub fn new_str_conver_error() -> Self{
+    //字符转换
+    pub fn new_str_conver_error() -> Self {
         ResponseBody {
             code: 7000,
             message: String::from("char conversion error"),
