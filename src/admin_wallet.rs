@@ -7,6 +7,7 @@ use asymmetric_crypto::hasher::{sha3::Sha3, sm3::Sm3};
 use asymmetric_crypto::keypair::Keypair;
 use dislog_hal::Hasher;
 use hex::ToHex;
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 
 use tokio::fs::File;
@@ -35,11 +36,14 @@ pub async fn new_reg_wallet(
     config: web::Data<Config>,
     req: web::Json<NewWalletRequest<Info>>,
 ) -> impl Responder {
-    println!("{:?}", req);
+    info!("{:?}", req);
     let mut file = match File::open(&config.cert_path).await {
-        Ok(f) => f,
+        Ok(f) => {
+            info!("{:?}", f);
+            f
+        }
         Err(e) => {
-            println!("file open failed:{:?}", e);
+            warn!("file open failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_file_error());
         }
     };
@@ -47,9 +51,12 @@ pub async fn new_reg_wallet(
     //read json file to string
     let mut contents = String::new();
     match file.read_to_string(&mut contents).await {
-        Ok(s) => s,
+        Ok(s) => {
+            info!("{:?}", s);
+            s
+        }
         Err(e) => {
-            println!("read file to string failed:{:?}", e);
+            warn!("read file to string failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
         }
     };
@@ -61,9 +68,12 @@ pub async fn new_reg_wallet(
         dislog_hal_sm2::PointInner,
         dislog_hal_sm2::ScalarInner,
     > = match serde_json::from_str(&contents) {
-        Ok(de) => de,
+        Ok(de) => {
+            info!("{:?}", de);
+            de
+        }
         Err(e) => {
-            println!("Keypair generate failed:{:?}", e);
+            warn!("Keypair generate failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
         }
     };

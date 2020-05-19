@@ -1,4 +1,6 @@
 use actix_web::{App, HttpServer};
+use log::Level;
+use simple_logger;
 
 mod admin_cert;
 mod admin_wallet;
@@ -7,6 +9,8 @@ pub mod response;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
+    //Initialize the log and set the print level
+    simple_logger::init_with_level(Level::Warn).unwrap();
     HttpServer::new(|| {
         App::new()
             .data(config::Config::default())

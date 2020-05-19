@@ -5,6 +5,7 @@ use asymmetric_crypto::hasher::sha3::Sha3;
 use asymmetric_crypto::keypair::Keypair;
 use core::convert::AsRef;
 use hex::{FromHex, ToHex};
+use log::{info, warn};
 use rand::thread_rng;
 use serde::{Deserialize, Serialize};
 
@@ -15,18 +16,24 @@ use tokio::prelude::*;
 pub async fn read_cert(config: web::Data<Config>) -> impl Responder {
     //read file
     let mut file = match File::open(&config.cert_path).await {
-        Ok(f) => f,
+        Ok(f) => {
+            info!("{:?}", f);
+            f
+        }
         Err(e) => {
-            println!("file open failed:{:?}", e);
+            warn!("file open failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_file_error());
         }
     };
     //read json file to String
     let mut contents = String::new();
     match file.read_to_string(&mut contents).await {
-        Ok(s) => s,
+        Ok(s) => {
+            info!("{:?}", s);
+            s
+        }
         Err(e) => {
-            println!("read file to string failed:{:?}", e);
+            warn!("read file to string failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
         }
     };
@@ -38,9 +45,12 @@ pub async fn read_cert(config: web::Data<Config>) -> impl Responder {
         dislog_hal_sm2::PointInner,
         dislog_hal_sm2::ScalarInner,
     > = match serde_json::from_str(&contents) {
-        Ok(de) => de,
+        Ok(de) => {
+            info!("{:?}", de);
+            de
+        }
         Err(e) => {
-            println!("Keypair conversion failed:{:?}", e);
+            warn!("Keypair conversion failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
         }
     };
@@ -63,23 +73,32 @@ pub async fn new_reg_cert(config: web::Data<Config>) -> impl Responder {
         dislog_hal_sm2::ScalarInner,
     >::generate(&mut rng)
     {
-        Ok(s) => s,
+        Ok(s) => {
+            info!("{:?}", s);
+            s
+        }
         Err(e) => {
-            println!("keypair conversion failed:{:?}", e);
+            warn!("keypair conversion failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
         }
     };
     let serialized = match serde_json::to_string(&info_form_rang) {
-        Ok(s) => s,
+        Ok(s) => {
+            info!("{:?}", s);
+            s
+        }
         Err(e) => {
-            println!("serialized to string failed:{:?}", e);
+            warn!("serialized to string failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
         }
     };
     let mut file = match File::create(&config.cert_path).await {
-        Ok(f) => f,
+        Ok(f) => {
+            info!("{:?}", f);
+            f
+        }
         Err(e) => {
-            println!("file create failed:{:?}", e);
+            warn!("file create failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_file_error());
         }
     };
@@ -101,9 +120,12 @@ pub async fn update_reg_cert(
     req: web::Json<UpdateCertRequest>,
 ) -> impl Responder {
     let sd: [u8; 32] = match FromHex::from_hex(&req.seed) {
-        Ok(s) => s,
+        Ok(s) => {
+            info!("{:?}", s);
+            s
+        }
         Err(e) => {
-            println!("32 byte from hex failed:{:?}", e);
+            warn!("32 byte from hex failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
         }
     };
@@ -114,23 +136,32 @@ pub async fn update_reg_cert(
         dislog_hal_sm2::ScalarInner,
     >::generate_from_seed(sd)
     {
-        Ok(s) => s,
+        Ok(s) => {
+            info!("{:?}", s);
+            s
+        }
         Err(e) => {
-            println!("keypair generate failed:{:?}", e);
+            warn!("keypair generate failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
         }
     };
     let serialized = match serde_json::to_string(&info_form_rang) {
-        Ok(s) => s,
+        Ok(s) => {
+            info!("{:?}", s);
+            s
+        }
         Err(e) => {
-            println!("serialized to string failed:{:?}", e);
+            warn!("serialized to string failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
         }
     };
     let mut file = match File::create(&config.cert_path).await {
-        Ok(f) => f,
+        Ok(f) => {
+            info!("{:?}", f);
+            f
+        }
         Err(e) => {
-            println!("file create failed:{:?}", e);
+            warn!("file create failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_file_error());
         }
     };
@@ -152,18 +183,24 @@ pub struct ReadCertResponse {
 pub async fn read_reg_cert(config: web::Data<Config>) -> impl Responder {
     //read file
     let mut file = match File::open(&config.cert_path).await {
-        Ok(f) => f,
+        Ok(f) => {
+            info!("{:?}", f);
+            f
+        }
         Err(e) => {
-            println!("file open failed:{:?}", e);
+            warn!("file open failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_file_error());
         }
     };
     //read json file to String
     let mut contents = String::new();
     match file.read_to_string(&mut contents).await {
-        Ok(s) => s,
+        Ok(s) => {
+            info!("{:?}", s);
+            s
+        }
         Err(e) => {
-            println!("read file to string failed:{:?}", e);
+            warn!("read file to string failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
         }
     };
@@ -175,9 +212,12 @@ pub async fn read_reg_cert(config: web::Data<Config>) -> impl Responder {
         dislog_hal_sm2::PointInner,
         dislog_hal_sm2::ScalarInner,
     > = match serde_json::from_str(&contents) {
-        Ok(de) => de,
+        Ok(de) => {
+            info!("{:?}", de);
+            de
+        }
         Err(e) => {
-            println!("Keypair generate failed:{:?}", e);
+            warn!("Keypair generate failed:{:?}", e);
             return HttpResponse::Ok().json(ResponseBody::<()>::new_str_conver_error());
         }
     };
