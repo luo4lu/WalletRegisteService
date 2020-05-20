@@ -3,9 +3,9 @@ use log::Level;
 use simple_logger;
 
 mod admin_cert;
-mod admin_wallet;
 mod config;
 pub mod response;
+mod wallet;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
@@ -18,7 +18,7 @@ async fn main() -> std::io::Result<()> {
             .service(admin_cert::new_reg_cert)
             .service(admin_cert::update_reg_cert)
             .service(admin_cert::read_reg_cert)
-            .service(admin_wallet::new_reg_wallet)
+            .service(wallet::new_reg_wallet)
     })
     .bind("127.0.0.1:8808")
     .unwrap()
