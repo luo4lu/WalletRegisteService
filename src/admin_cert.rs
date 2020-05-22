@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::ConfigPath;
 use crate::response::ResponseBody;
 use actix_web::{get, post, put, web, HttpResponse, Responder};
 use asymmetric_crypto::hasher::sha3::Sha3;
@@ -13,7 +13,7 @@ use tokio::fs::File;
 use tokio::prelude::*;
 //read cert
 #[get("/api/cert")]
-pub async fn read_cert(config: web::Data<Config>) -> impl Responder {
+pub async fn read_cert(config: web::Data<ConfigPath>) -> impl Responder {
     //read file
     let mut file = match File::open(&config.cert_path).await {
         Ok(f) => {
@@ -62,7 +62,7 @@ pub async fn read_cert(config: web::Data<Config>) -> impl Responder {
 
 //init create a new register system cert
 #[post("/api/admin/cert")]
-pub async fn new_reg_cert(config: web::Data<Config>) -> impl Responder {
+pub async fn new_reg_cert(config: web::Data<ConfigPath>) -> impl Responder {
     //decline a rand number object
     let mut rng = thread_rng();
     //generate Serialize structure data
@@ -116,7 +116,7 @@ pub struct UpdateCertRequest {
 
 #[put("/api/admin/cert")]
 pub async fn update_reg_cert(
-    config: web::Data<Config>,
+    config: web::Data<ConfigPath>,
     req: web::Json<UpdateCertRequest>,
 ) -> impl Responder {
     let sd: [u8; 32] = match FromHex::from_hex(&req.seed) {
@@ -180,7 +180,7 @@ pub struct ReadCertResponse {
 }
 
 #[get("/admin/cert")]
-pub async fn read_reg_cert(config: web::Data<Config>) -> impl Responder {
+pub async fn read_reg_cert(config: web::Data<ConfigPath>) -> impl Responder {
     //read file
     let mut file = match File::open(&config.cert_path).await {
         Ok(f) => {

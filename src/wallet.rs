@@ -1,11 +1,11 @@
 use crate::response::ResponseBody;
-//备用方法
-//use crypto::{digest::Digest,ripemd160::Ripemd160};//{ ripemd160::Ripemd160, sha3::Sha3};
 use actix_web::{post, web, HttpResponse, Responder};
 use asymmetric_crypto::hasher::sm3::Sm3;
 use dislog_hal::Hasher;
 use hex::ToHex;
 use serde::{Deserialize, Serialize};
+//数据库相关
+use deadpool_postgres::Pool;
 
 //register a new wallet
 #[derive(Deserialize, Debug)]
@@ -13,11 +13,11 @@ pub struct NewWalletRequest {
     cert: String,
     info: Info,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Info {
     name: String,
     idcard: String,
-    other: String,
+    info: String,
 }
 
 #[derive(Serialize)]
@@ -27,21 +27,25 @@ pub struct NewWalletRespones {
 }
 
 #[post("/api/wallet")]
-pub async fn new_reg_wallet(req: web::Json<NewWalletRequest>) -> impl Responder {
-    //备用方法
-    //hash conversion
-    /*let mut hasher = crypto::sha3::Sha3::sha3_256();
-    hasher.input_str(&public_str);
-    let hex = hasher.result_str();
-
-    let mut ripemd = Ripemd160::new();
-    ripemd.input_str(&hex);
-    let uid_hasher = ripemd.result_str();*/
-
+pub async fn new_reg_wallet(
+    data: web::Data<Pool>,
+    req: web::Json<NewWalletRequest>,
+) -> impl Responder {
+    //    println!("data = {:?}",data);
     //use Sm3算法实现hash转换
     let mut uid_hasher = Sm3::default();
     uid_hasher.update(&req.cert);
     let uid_str = uid_hasher.finalize().encode_hex();
+    //插入数据库
+    let conn = data.get().await.unwrap();
+    let statement = conn
+        .prepare("INSERT INTO wallets (id,cert,info) VALUES ($1, $2, $3)")
+        .await
+        .unwrap();
+    let jstr = serde_json::to_value(&req.info).unwrap();
+    conn.execute(&statement, &[&uid_str, &req.cert, &jstr])
+        .await
+        .unwrap();
 
     HttpResponse::Ok().json(ResponseBody::new_success(Some(NewWalletRespones {
         cert: req.cert.clone(),

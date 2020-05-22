@@ -1,6 +1,5 @@
 use actix_web::{App, HttpServer};
 use log::Level;
-use simple_logger;
 
 mod admin_cert;
 mod config;
@@ -13,7 +12,8 @@ async fn main() -> std::io::Result<()> {
     simple_logger::init_with_level(Level::Warn).unwrap();
     HttpServer::new(|| {
         App::new()
-            .data(config::Config::default())
+            .data(config::get_db())
+            .data(config::ConfigPath::default())
             .service(admin_cert::read_cert)
             .service(admin_cert::new_reg_cert)
             .service(admin_cert::update_reg_cert)
