@@ -31,7 +31,6 @@ pub async fn new_reg_wallet(
     data: web::Data<Pool>,
     req: web::Json<NewWalletRequest>,
 ) -> impl Responder {
-    //    println!("data = {:?}",data);
     //use Sm3算法实现hash转换
     let mut uid_hasher = Sm3::default();
     uid_hasher.update(&req.cert);
@@ -39,7 +38,7 @@ pub async fn new_reg_wallet(
     //插入数据库
     let conn = data.get().await.unwrap();
     let statement = conn
-        .prepare("INSERT INTO wallets (id,cert,info) VALUES ($1, $2, $3)")
+        .prepare("INSERT INTO wallets (id,cert,info,create_time,update_time) VALUES ($1, $2, $3,now(),now())")
         .await
         .unwrap();
     let jstr = serde_json::to_value(&req.info).unwrap();
