@@ -1,10 +1,10 @@
 use crate::response::ResponseBody;
-use actix_web::{post, get, web, HttpResponse, Responder};
+use actix_web::{get, post, web, HttpResponse, Responder};
 use asymmetric_crypto::hasher::sm3::Sm3;
 use dislog_hal::Hasher;
 use hex::ToHex;
-use serde::{Deserialize, Serialize};
 use log::{info, warn};
+use serde::{Deserialize, Serialize};
 //数据库相关
 use deadpool_postgres::Pool;
 
@@ -65,27 +65,36 @@ pub struct GetWalletRespones {
     info: String,
 }
 
+//获取钱包信息
 #[get("/api/wallet")]
-pub async fn get_wallet_info(data: web::Data<Pool>,
-    req: web::Json<GetWalletRequest>)-> impl Responder{
-        //连接数据库获取句柄
-        let conn = data.get().await.unwrap();
-        let inset_statement = match conn.query(
-                "SELECT * from wallets where id = $1", &[&req.uid]).await{
-                    Ok(row) => {
-                        info!("select success!{:?}",row);
-                        row
-                    }
-                    Err(error) => {
-                        warn!("select failde!!{:?}",error);
-                        return HttpResponse::Ok().json(ResponseBody::<()>::database_build_error());
-                    }
-                };
-        let v_cert = inset_statement[0].get(1);
-        let v_info:serde_json::Value = inset_statement[0].get(2);
-        let s_info = v_info.to_string();
-        HttpResponse::Ok().json(ResponseBody::new_success(Some(GetWalletRespones {
-            cert: v_cert,
-            info: s_info,
-        })))
-    } 
+pub async fn get_wallet_info(
+    data: web::Data<Pool>,
+    req: web::Json<GetWalletRequest>,
+) -> impl Responder {
+    //连接数据库获取句柄
+    let conn = data.get().await.unwrap();
+    let inset_statement = match conn
+        .query("SELECT * from wallets where id = $1", &[&req.uid])
+        .await
+    {
+        Ok(row) => {
+            info!("select success!{:?}", row);
+            row
+        }
+        Err(error) => {
+            warn!("select failde!!{:?}", error);
+            return HttpResponse::Ok().json(ResponseBody::<()>::database_build_error());
+        }
+    };
+    if inset_statement.len() <= 0{
+        warn!("SELECT check uid failed,please check uid value");
+        return HttpResponse::Ok().json(ResponseBody::<()>::database_build_error());
+    }
+    let v_cert = inset_statement[0].get(1);
+    let v_info: serde_json::Value = inset_statement[0].get(2);
+    let s_info = v_info.to_string();
+    HttpResponse::Ok().json(ResponseBody::new_success(Some(GetWalletRespones {
+        cert: v_cert,
+        info: s_info,
+    })))
+}
