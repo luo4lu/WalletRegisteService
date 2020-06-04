@@ -38,14 +38,35 @@ pub async fn new_reg_wallet(
     let uid_str = uid_hasher.finalize().encode_hex();
     //插入数据库
     let conn = data.get().await.unwrap();
-    let statement = conn
+    let statement = match conn
         .prepare("INSERT INTO wallets (id,cert,info,create_time,update_time) VALUES ($1, $2, $3,now(),now())")
         .await
-        .unwrap();
+        {
+            Ok(s) => {
+                info!("database command success!");
+                s
+            }
+            Err(error) =>{
+                warn!("database command failed: {:?}",error);
+                return HttpResponse::Ok().json(ResponseBody::<String>::database_runing_error(Some(error.to_string())));
+            }
+        };
     let jstr = serde_json::to_value(&req.info).unwrap();
-    conn.execute(&statement, &[&uid_str, &req.cert, &jstr])
+    match conn
+        .execute(&statement, &[&uid_str, &req.cert, &jstr])
         .await
-        .unwrap();
+    {
+        Ok(s) => {
+            info!("database parameter success!");
+            s
+        }
+        Err(error) => {
+            warn!("database parameter failed: {:?}", error);
+            return HttpResponse::Ok().json(ResponseBody::<String>::database_runing_error(Some(
+                error.to_string(),
+            )));
+        }
+    };
 
     HttpResponse::Ok().json(ResponseBody::new_success(Some(NewWalletRespones {
         cert: req.cert.clone(),
@@ -86,7 +107,7 @@ pub async fn get_wallet_info(
             return HttpResponse::Ok().json(ResponseBody::<()>::database_build_error());
         }
     };
-    if inset_statement.len() <= 0{
+    if inset_statement.is_empty() {
         warn!("SELECT check uid failed,please check uid value");
         return HttpResponse::Ok().json(ResponseBody::<()>::database_build_error());
     }
