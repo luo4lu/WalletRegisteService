@@ -12,13 +12,7 @@ use deadpool_postgres::Pool;
 #[derive(Deserialize, Debug)]
 pub struct NewWalletRequest {
     cert: String,
-    info: Info,
-}
-#[derive(Deserialize, Serialize, Debug)]
-pub struct Info {
-    name: String,
-    idcard: String,
-    info: String,
+    info: serde_json::Value,
 }
 
 #[derive(Serialize)]
