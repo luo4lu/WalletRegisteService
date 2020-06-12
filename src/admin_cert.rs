@@ -244,15 +244,16 @@ pub struct RegisterRequest {
 pub struct DcdsRegistRequest {
     cert: String,
     extra: serde_json::Value,
-    #[serde(rename="type")]
+    #[serde(rename = "type")]
     t: String,
 }
 
 //注册证书信息到中心管理系统
 #[post("/api/admin/cms")]
-pub async fn register_cms(config: web::Data<ConfigPath>,
-     req: web::Json<RegisterRequest>) -> impl Responder 
-{
+pub async fn register_cms(
+    config: web::Data<ConfigPath>,
+    req: web::Json<RegisterRequest>,
+) -> impl Responder {
     //read file
     let mut file = match File::open(&config.cert_path).await {
         Ok(f) => {
@@ -299,8 +300,6 @@ pub async fn register_cms(config: web::Data<ConfigPath>,
         t: String::from("WRS"),
     };
     let client = reqwest::Client::new();
-    let _res = client.post(&req.url)    
-        .json(&params)
-        .send().await;
+    let _res = client.post(&req.url).json(&params).send().await;
     HttpResponse::Ok().json(ResponseBody::<()>::new_success(None))
 }
