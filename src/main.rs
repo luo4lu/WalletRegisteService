@@ -20,8 +20,9 @@ async fn main() -> std::io::Result<()> {
             .service(admin_cert::read_reg_cert)
             .service(wallet::new_reg_wallet)
             .service(wallet::get_wallet_info)
+            .service(admin_cert::register_cms)
     })
-    .bind("127.0.0.1:8808")
+    .bind("192.168.8.125:8808")
     .unwrap()
     .run()
     .await
