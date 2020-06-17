@@ -1,5 +1,6 @@
 use actix_web::{App, HttpServer};
 use log::Level;
+use std::env;
 
 mod admin_cert;
 mod config;
@@ -8,6 +9,7 @@ mod wallet;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
+    let args: Vec<String> = env::args().collect();
     //Initialize the log and set the print level
     simple_logger::init_with_level(Level::Warn).unwrap();
     HttpServer::new(|| {
@@ -22,7 +24,7 @@ async fn main() -> std::io::Result<()> {
             .service(wallet::get_wallet_info)
             .service(admin_cert::register_cms)
     })
-    .bind("192.168.8.125:8808")
+    .bind(&args[1])?
     .unwrap()
     .run()
     .await
