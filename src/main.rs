@@ -4,6 +4,7 @@ use log::Level;
 
 mod admin_cert;
 mod config;
+mod config_command;
 pub mod response;
 mod wallet;
 
@@ -32,7 +33,6 @@ async fn main() -> std::io::Result<()> {
             .service(admin_cert::register_cms)
     })
     .bind(_path)?
-    .unwrap()
     .run()
     .await
 }
