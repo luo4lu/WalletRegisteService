@@ -3,6 +3,7 @@ CREATE TABLE wallets(
 	id VARCHAR(255) PRIMARY KEY NOT NULL,
 	cert TEXT NOT NULL,
 	info jsonb NOT NULL,
+	cloud_user_id varchar(255) NOT NULL,
 	create_time timestamp NOT NULL,
     update_time timestamp NOT NULL
 	);

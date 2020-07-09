@@ -1,6 +1,6 @@
 use crate::config::ConfigPath;
 use crate::response::ResponseBody;
-use actix_web::{get, post, put, web, HttpResponse, Responder};
+use actix_web::{get, post, put, web, HttpRequest, HttpResponse, Responder};
 use asymmetric_crypto::hasher::sha3::Sha3;
 use asymmetric_crypto::keypair::Keypair;
 use core::convert::AsRef;
@@ -253,7 +253,13 @@ pub struct DcdsRegistRequest {
 pub async fn register_cms(
     config: web::Data<ConfigPath>,
     req: web::Json<RegisterRequest>,
+    req_head: HttpRequest,
 ) -> impl Responder {
+    //获取请求头中的uuid
+    let http_head = req_head.headers();
+    let head_value = http_head.get("X-CLOUD-USER_ID").unwrap();
+    let head_str = head_value.to_str().unwrap();
+    let head_name:&str = &*String::from("X-CLOUD-USER_ID");
     //read file
     let mut file = match File::open(&config.cert_path).await {
         Ok(f) => {
@@ -300,6 +306,9 @@ pub async fn register_cms(
         t: String::from("WRS"),
     };
     let client = reqwest::Client::new();
-    let _res = client.post(&req.url).json(&params).send().await;
+    let _res = client.post(&req.url)
+                .header(head_name, head_str)
+                .json(&params)
+                .send().await;
     HttpResponse::Ok().json(ResponseBody::<()>::new_success(None))
 }
