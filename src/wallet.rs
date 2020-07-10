@@ -99,7 +99,10 @@ pub async fn get_wallet_info(
     //连接数据库获取句柄
     let conn = data.get().await.unwrap();
     let inset_statement = match conn
-        .query("SELECT * from wallets where id = $1 AND cloud_user_id = $2", &[&req.uid, &head_str])
+        .query(
+            "SELECT * from wallets where id = $1 AND cloud_user_id = $2",
+            &[&req.uid, &head_str],
+        )
         .await
     {
         Ok(row) => {
