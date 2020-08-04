@@ -1,5 +1,5 @@
 use crate::response::ResponseBody;
-use actix_web::{get, post, web, HttpResponse, Responder};
+use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use asymmetric_crypto::hasher::sm3::Sm3;
 use dislog_hal::Hasher;
 use hex::ToHex;
@@ -25,7 +25,12 @@ pub struct NewWalletRespones {
 pub async fn new_reg_wallet(
     data: web::Data<Pool>,
     req: web::Json<NewWalletRequest>,
+    req_head: HttpRequest,
 ) -> impl Responder {
+    //获取请求头中的uuid
+    let http_head = req_head.headers();
+    let head_value = http_head.get("X-CLOUD-USER_ID").unwrap();
+    let head_str = head_value.to_str().unwrap();
     //use Sm3算法实现hash转换
     let mut uid_hasher = Sm3::default();
     uid_hasher.update(&req.cert);
@@ -33,7 +38,7 @@ pub async fn new_reg_wallet(
     //插入数据库
     let conn = data.get().await.unwrap();
     let statement = match conn
-        .prepare("INSERT INTO wallets (id,cert,info,create_time,update_time) VALUES ($1, $2, $3,now(),now())")
+        .prepare("INSERT INTO wallets (id,cert,info,cloud_user_id,create_time,update_time) VALUES ($1, $2, $3, $4, now(),now())")
         .await
         {
             Ok(s) => {
@@ -47,7 +52,7 @@ pub async fn new_reg_wallet(
         };
     let jstr = serde_json::to_value(&req.info).unwrap();
     match conn
-        .execute(&statement, &[&uid_str, &req.cert, &jstr])
+        .execute(&statement, &[&uid_str, &req.cert, &jstr, &head_str])
         .await
     {
         Ok(s) => {
@@ -85,11 +90,19 @@ pub struct GetWalletRespones {
 pub async fn get_wallet_info(
     data: web::Data<Pool>,
     req: web::Json<GetWalletRequest>,
+    req_head: HttpRequest,
 ) -> impl Responder {
+    //获取请求头中的uuid
+    let http_head = req_head.headers();
+    let head_value = http_head.get("X-CLOUD-USER_ID").unwrap();
+    let head_str = head_value.to_str().unwrap();
     //连接数据库获取句柄
     let conn = data.get().await.unwrap();
     let inset_statement = match conn
-        .query("SELECT * from wallets where id = $1", &[&req.uid])
+        .query(
+            "SELECT * from wallets where id = $1 AND cloud_user_id = $2",
+            &[&req.uid, &head_str],
+        )
         .await
     {
         Ok(row) => {

@@ -1,13 +1,23 @@
 use actix_web::{App, HttpServer};
+use clap::ArgMatches;
 use log::Level;
 
 mod admin_cert;
 mod config;
+mod config_command;
 pub mod response;
 mod wallet;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
+    let mut _path: String = String::new();
+    let matches: ArgMatches = config_command::get_command();
+    if let Some(d) = matches.value_of("wrs") {
+        _path = d.to_string();
+    } else {
+        _path = String::from("127.0.0.1:9004");
+    }
+
     //Initialize the log and set the print level
     simple_logger::init_with_level(Level::Warn).unwrap();
     HttpServer::new(|| {
@@ -22,8 +32,7 @@ async fn main() -> std::io::Result<()> {
             .service(wallet::get_wallet_info)
             .service(admin_cert::register_cms)
     })
-    .bind("192.168.8.125:8808")
-    .unwrap()
+    .bind(_path)?
     .run()
     .await
 }
